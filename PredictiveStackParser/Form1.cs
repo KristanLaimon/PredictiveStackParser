@@ -13,6 +13,37 @@ namespace PredictiveStackParser
             var lexicResults = lexic.EscanearTexto(this.TextoPorDefecto);
             lexicResults = lexic.AddSignoDolarAlFinal(lexicResults);
             var help = sintactic.LL(lexicResults);
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+            //se crearon por error de deo
+        }
+
+        private void label4_Click(object sender, EventArgs e)
+        {
+            //se crearon por error de deo
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+            //se crearon por error de deo
+        }
+
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+            //
+        }
+
+        private void label3_Click_1(object sender, EventArgs e)
+        {
+            //
         }
     }
 }
