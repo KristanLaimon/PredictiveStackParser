@@ -4,7 +4,7 @@ namespace PredictiveStackParser
 {
     public partial class Form1 : Form
     {
-        private readonly string TextoPorDefecto = "(a+bb bb)";
+        private readonly string TextoPorDefecto = "(A + B)\r\n(A + B + B) + D\r\n(((A + B)))\r\nA + (C + D)\r\n((A + B) * (C / D) - (D * A)) - D\r\nA + (B + C)";
         private LexicAutomata lexic = new();
         private BetterSintacticAutomata sintactic = new();
         public Form1()

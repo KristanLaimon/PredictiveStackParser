@@ -88,6 +88,17 @@ namespace PredictiveStackParser.Automatas
             return element != "\0";
         }
 
+        private BetterTypeError IdentifyErrorType(string elementLexico, string elementExtraido)
+        {
+            if (elementLexico == "$" && elementExtraido == "F") return BetterTypeError.MissingClosingBracket;
+            if (elementLexico == "Z" && elementExtraido == "F") return BetterTypeError.MissingOperand;
+            if (elementLexico == "X" && elementExtraido == "G") return BetterTypeError.MissingOperator;
+            if (elementLexico == ")")return BetterTypeError.MissingOpeningBracket;
+            if (elementExtraido == "A") return BetterTypeError.MissingClosingBracket;
+
+            return BetterTypeError.InvalidExpression;
+        }
+
         public List<BetterSintacticError> LL(LexicAutomataResult lexicResults)
         {
             List<BetterSintacticError> toReturn = new List<BetterSintacticError>();
@@ -105,8 +116,37 @@ namespace PredictiveStackParser.Automatas
             string elementoLexico = String.Empty;
             string elementoExtraido = String.Empty;
 
+            int actualLine = 1;
             do
             {
+                int beforeLine = actualLine;
+                actualLine = fullLexicTable[apuntador].LineaEnDondeAparece;
+                if (actualLine != beforeLine)
+                {
+                    //Has changed of line, lets reset this
+                    this.stack.Clear();
+                    this.stack.Push("$");
+                    this.stack.Push("P");
+                    elementoLexico = String.Empty;
+                    elementoExtraido = String.Empty;
+                }
+
+                if (stack.Count == 0)
+                {
+                    // Error: Stack is empty!!, it means there was a lot of ;;;; or
+                    // elementoLexico and elementoExtraido went to "λ" many times that stock out the stack!
+                    if (!toReturn.Any(e => e.LineFound == fullLexicTable[apuntador].LineaEnDondeAparece))
+                    {
+                        toReturn.Add(new BetterSintacticError
+                        {
+                            ExpressionText = fullLexicTable[apuntador].TokenText,
+                            errorType = IdentifyErrorType(elementoLexico, elementoExtraido),
+                            LineFound = fullLexicTable[apuntador].LineaEnDondeAparece
+                        });
+                    }
+                    break;
+                }
+
                 elementoExtraido = this.stack.Pop();
                 elementoLexico = fullLexicTable[apuntador].TokenText;
 
@@ -125,7 +165,7 @@ namespace PredictiveStackParser.Automatas
                             toReturn.Add(new BetterSintacticError
                             {
                                 ExpressionText = fullLexicTable[apuntador].TokenText,
-                                errorType = BetterTypeError.InvalidExpression,
+                                errorType = IdentifyErrorType(elementoLexico, elementoExtraido),
                                 LineFound = fullLexicTable[apuntador].LineaEnDondeAparece
                             });
                         }
@@ -135,10 +175,11 @@ namespace PredictiveStackParser.Automatas
                 else
                 {
                     var production = tablaSintactica[productionToInt(elementoExtraido), noProductionToInt(elementoLexico)];
-                    if (isProduction(production)){
+                    if (isProduction(production))
+                    {
                         if (production != "λ")
                         {
-                            foreach(char symbol in production.Reverse())
+                            foreach (char symbol in production.Reverse())
                                 this.stack.Push(symbol.ToString());
                         }
                     }
@@ -150,7 +191,7 @@ namespace PredictiveStackParser.Automatas
                             toReturn.Add(new BetterSintacticError
                             {
                                 ExpressionText = fullLexicTable[apuntador].TokenText,
-                                errorType = BetterTypeError.InvalidExpression,
+                                errorType = IdentifyErrorType(elementoLexico, elementoExtraido),
                                 LineFound = fullLexicTable[apuntador].LineaEnDondeAparece
                             });
                         }
