@@ -104,11 +104,9 @@ namespace PredictiveStackParser.Automatas
             int apuntador = 0;
             string elementoLexico = String.Empty;
             string elementoExtraido = String.Empty;
-            RegistroLexico elementoLexicoObj = null;
 
             do
             {
-                elementoLexicoObj = fullLexicTable[apuntador]; //Added by me to get more info about the extracted element!
                 elementoExtraido = this.stack.Pop();
                 elementoLexico = fullLexicTable[apuntador].TokenText;
 
@@ -121,12 +119,17 @@ namespace PredictiveStackParser.Automatas
                         apuntador++;
                     else
                     {
-                        toReturn.Add(new BetterSintacticError
+                        // Error: Add once and progress pointer
+                        if (!toReturn.Any(e => e.LineFound == fullLexicTable[apuntador].LineaEnDondeAparece))
                         {
-                            ExpressionText = elementoLexico,
-                            errorType = BetterTypeError.InvalidExpression, //How can i know the error type?
-                            LineFound = elementoLexicoObj.LineaEnDondeAparece
-                        });
+                            toReturn.Add(new BetterSintacticError
+                            {
+                                ExpressionText = fullLexicTable[apuntador].TokenText,
+                                errorType = BetterTypeError.InvalidExpression,
+                                LineFound = fullLexicTable[apuntador].LineaEnDondeAparece
+                            });
+                        }
+                        apuntador++; // Progress to avoid processing the same error multiple times
                     }
                 }
                 else
@@ -141,15 +144,20 @@ namespace PredictiveStackParser.Automatas
                     }
                     else
                     {
-                        toReturn.Add(new BetterSintacticError
+                        // Error: Invalid production for the non-terminal and input token
+                        if (!toReturn.Any(e => e.LineFound == fullLexicTable[apuntador].LineaEnDondeAparece))
                         {
-                            ExpressionText = elementoLexico,
-                            errorType = BetterTypeError.InvalidExpression, //How can i know the error type?
-                            LineFound = elementoLexicoObj.LineaEnDondeAparece
-                        });
+                            toReturn.Add(new BetterSintacticError
+                            {
+                                ExpressionText = fullLexicTable[apuntador].TokenText,
+                                errorType = BetterTypeError.InvalidExpression,
+                                LineFound = fullLexicTable[apuntador].LineaEnDondeAparece
+                            });
+                        }
+                        apuntador++; // Progress to avoid looping on the same issue
                     }
                 }
-            } while (elementoExtraido != "$");
+            } while (elementoLexico != "$");
 
             return toReturn;
         }
