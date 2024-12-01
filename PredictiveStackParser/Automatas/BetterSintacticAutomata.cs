@@ -39,7 +39,7 @@ namespace PredictiveStackParser.Automatas
                 /*Op será X*/ /*Or será Z */
                        //(        Op      )    Or     ;    $
                 /*P*/ { "(FA;P", "F;P", "\0", "\0", "\0", "λ" },
-                /*A*/ { "P)",    "P)",  "\0", "\0", "\0", "\0" },
+                /*A*/ { "P)",    "P)",  ")G", "\0", "\0", "\0" },
                 /*F*/ { "(FA",   "OG",  "\0", "\0", "\0", "\0" },
                 /*G*/ { "\0",    "\0",  "λ",  "RF", "λ",  "λ" },
                 /*O*/ { "\0",    "X",   "\0", "\0", "\0", "\0"},
@@ -54,9 +54,9 @@ namespace PredictiveStackParser.Automatas
         private int noProductionToInt(string i)
         {
             if (i == "(") return 0;
-            if (isOperand(i)) return 1;
+            if (i == "X") return 1;
             if (i == ")") return 2;
-            if (isOperator(i)) return 3;
+            if (i == "Z") return 3;
             if (i == ";") return 4;
             if (i == "$") return 5;
 
