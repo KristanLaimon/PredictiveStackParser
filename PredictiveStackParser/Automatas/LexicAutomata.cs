@@ -31,7 +31,6 @@ namespace PredictiveStackParser.Automatas
 
     public record RegistroLexico
     {
-        public int LineaNum;
         public string TokenText = "";
         public Token tokenType;
         public int Tipo;
@@ -60,12 +59,13 @@ namespace PredictiveStackParser.Automatas
         public string DescripcionError = "";
     }
 
-    public record AutomataResult
+    public record LexicAutomataResult
     {
         public List<RegistroLexico> RegistrosLexicos = [];
         public List<RegistroDinamico> RegistrosDinamicos = [];
         public List<RegistroConstante> RegistrosConstantes = [];
         public List<RegistroError> Errores = [];
+        public List<List<RegistroLexico>> RegistrosLexicosPorLinea = [];
     }
 
     internal class LexicAutomata
@@ -84,7 +84,7 @@ namespace PredictiveStackParser.Automatas
         // Mini-Almacenes para almacenar identificadores y constantes
         private StringBuilder bufferIdentificador;
         private StringBuilder bufferConstante;
-        private AutomataResult results;
+        private LexicAutomataResult results;
 
         // Conjuntos y diccionarios
         private readonly (char, int) SignoDolar = ('$', 199);
@@ -117,7 +117,7 @@ namespace PredictiveStackParser.Automatas
             bufferIdentificador = new StringBuilder();
             valorConstanteActual = ValorConstanteDefault;
             valorIdentificadorActual = ValorIdentificadorDefault;
-            results = new AutomataResult();
+            results = new LexicAutomataResult();
 
             //---------------- Inicializando Diccionarios ------------------
             Tipos = new()
@@ -152,7 +152,24 @@ namespace PredictiveStackParser.Automatas
         }
 
 
-        public AutomataResult EscanearTexto(string allText)
+        public LexicAutomataResult AddSignoDolarAlFinal(LexicAutomataResult lexicResults)
+        {
+            var dolarRecord = new RegistroLexico
+            {
+                TokenText = "$",
+                Codigo = (int)Token.SignoDolar,
+                LineaEnDondeAparece = lexicResults.RegistrosLexicosPorLinea.Count,
+                Tipo = Tipos[Token.SignoDolar],
+                tokenType = Token.SignoDolar
+            };
+            lexicResults.RegistrosLexicosPorLinea.Last().Add(dolarRecord);
+            lexicResults.RegistrosLexicos.Add(dolarRecord);
+
+            return lexicResults;
+        }
+
+
+        public LexicAutomataResult EscanearTexto(string allText)
         {
             Resetear();
             string[] lineas = allText.Replace("\r", "").Split('\n');
@@ -196,7 +213,7 @@ namespace PredictiveStackParser.Automatas
                                 CodigoError = 102,
                                 DescripcionError = "Elemento Inválido",
                                 ErrorTexto = actualErrorText,
-                                LineaEnDondeAparece = lineaActualIndex + 1
+                                LineaEnDondeAparece = lineaActualIndex + 1,
                             });
                         }
 
@@ -213,7 +230,6 @@ namespace PredictiveStackParser.Automatas
                             {
                                 results.RegistrosLexicos.Add(new RegistroLexico
                                 {
-                                    LineaNum = lineaActualIndex + 1,
                                     Codigo = Delimitadores[c],
                                     TokenText = c.ToString(),
                                     Tipo = Tipos[Token.Delimitadores],
@@ -226,7 +242,6 @@ namespace PredictiveStackParser.Automatas
                             {
                                 results.RegistrosLexicos.Add(new RegistroLexico
                                 {
-                                    LineaNum = lineaActualIndex + 1,
                                     Codigo = Operadores[c],
                                     TokenText = c.ToString(),
                                     Tipo = Tipos[Token.Operadores],
@@ -300,6 +315,14 @@ namespace PredictiveStackParser.Automatas
                     bufferIdentificador.Clear();
                 }
             }
+
+            List<List<RegistroLexico>> better = this.results.RegistrosLexicos
+                .GroupBy(x => x.LineaEnDondeAparece)
+                .OrderBy(group => group.Key)
+                .Select(group => group.ToList())
+                .ToList();
+            results.RegistrosLexicosPorLinea = better;
+
             return results;
         }
 
@@ -309,7 +332,7 @@ namespace PredictiveStackParser.Automatas
             valorIdentificadorActual = ValorIdentificadorDefault;
             valorConstanteActual = ValorConstanteDefault;
             bufferConstante.Clear();
-            results = new AutomataResult();
+            results = new LexicAutomataResult();
         }
 
         private TipoChar CategorizarCaracter(char c)
@@ -346,7 +369,6 @@ namespace PredictiveStackParser.Automatas
             //Toca añadirlo a la tabla léxica en general también
             results.RegistrosLexicos.Add(new RegistroLexico
             {
-                LineaNum = noLineaEncontrado,
                 Codigo = valorConstanteActual,
                 Tipo = Tipos[Token.Constante],
                 TokenText = constanteText,
@@ -393,7 +415,6 @@ namespace PredictiveStackParser.Automatas
 
             results.RegistrosLexicos.Add(new RegistroLexico()
             {
-                LineaNum = noLineaEncontrado,
                 Codigo = valorDeEsteIdentificador,
                 Tipo = Tipos[Token.Identificador],
                 TokenText = identificadorText,

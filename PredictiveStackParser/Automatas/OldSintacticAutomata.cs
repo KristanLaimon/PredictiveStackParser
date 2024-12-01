@@ -66,7 +66,7 @@ namespace PredictiveStackParser.Automatas
             _results.Clear();
 
             var registersPerLine = lexicResults
-                .GroupBy(x => x.LineaNum)
+                .GroupBy(x => x.LineaEnDondeAparece)
                 .OrderBy(group => group.Key)
                 .Select(group => group.ToList())
                 .ToList();
