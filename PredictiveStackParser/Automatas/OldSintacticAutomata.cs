@@ -105,7 +105,7 @@ namespace PredictiveStackParser.Automatas
                             {
                                 errorType = SintacticError.MissingOpeningBracket,
                                 ExpressionText = GetFullText(linea),
-                                LineFound = r.LineaNum
+                                LineFound = r.LineaEnDondeAparece
                             });
                             alreadyErrorHandled = true;
                             break;
@@ -137,7 +137,7 @@ namespace PredictiveStackParser.Automatas
                         {
                             errorType = errorToSend,
                             ExpressionText = fullLineText,
-                            LineFound = r.LineaNum
+                            LineFound = r.LineaEnDondeAparece
                         });
                         alreadyErrorHandled = true;
                         break;
@@ -157,7 +157,7 @@ namespace PredictiveStackParser.Automatas
                     {
                         errorType = SintacticError.NoError,
                         ExpressionText = GetFullText(linea),
-                        LineFound = linea[0].LineaNum
+                        LineFound = linea[0].LineaEnDondeAparece
                     });
                 }
                 else if (!IsActualStateValid())
@@ -168,7 +168,7 @@ namespace PredictiveStackParser.Automatas
                         {
                             errorType = SintacticError.MissingOperand,
                             ExpressionText = GetFullText(linea),
-                            LineFound = linea[0].LineaNum
+                            LineFound = linea[0].LineaEnDondeAparece
                         });
                     }
                     else
@@ -177,7 +177,7 @@ namespace PredictiveStackParser.Automatas
                         {
                             errorType = SintacticError.InvalidExpression,
                             ExpressionText = GetFullText(linea),
-                            LineFound = linea[0].LineaNum
+                            LineFound = linea[0].LineaEnDondeAparece
                         });
                     }
                 }
@@ -187,7 +187,7 @@ namespace PredictiveStackParser.Automatas
                     {
                         errorType = SintacticError.MissingClosingBracket,
                         ExpressionText = GetFullText(linea),
-                        LineFound = linea[0].LineaNum
+                        LineFound = linea[0].LineaEnDondeAparece
                     });
                 }
 

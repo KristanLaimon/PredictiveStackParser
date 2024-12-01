@@ -48,12 +48,11 @@ namespace PredictiveStackParser.Automatas
 
         }
 
+        private bool isOperand(string element) => element.All(Char.IsLetterOrDigit);
+        private bool isOperator(string element) => element == "+" || element == "-" || element == "*" || element == "/";
+
         private int noProductionToInt(string i)
         {
-
-            Func<string, bool> isOperand = (op) => op.ToArray().Any(letter => !Char.IsLetter(letter) || !Char.IsNumber(letter)); 
-            Func<string, bool> isOperator = (or) => or == "+" || or == "-" || or == "*" || or == "/";
-
             if (i == "(") return 0;
             if (isOperand(i)) return 1;
             if (i == ")") return 2;
@@ -74,7 +73,7 @@ namespace PredictiveStackParser.Automatas
                 "G" => 3,
                 "O" => 4,
                 "R" => 5,
-                _ => -1,
+                _ => throw new Exception($"Unexpected non-terminal '{letterProduction}' encountered."),
             };
         }
 
@@ -112,6 +111,10 @@ namespace PredictiveStackParser.Automatas
                 elementoLexicoObj = fullLexicTable[apuntador]; //Added by me to get more info about the extracted element!
                 elementoExtraido = this.stack.Pop();
                 elementoLexico = fullLexicTable[apuntador].TokenText;
+
+                if (isOperand(elementoLexico)) elementoLexico = "X";  //Added by me 
+                else if (isOperator(elementoLexico)) elementoLexico = "Z"; //Added by me
+
                 if (isTerminal(elementoExtraido) || elementoExtraido == "$")
                 {
                     if (elementoLexico == elementoExtraido)
@@ -125,22 +128,30 @@ namespace PredictiveStackParser.Automatas
                             LineFound = elementoLexicoObj.LineaEnDondeAparece
                         });
                     }
-                    //else
-                    //    throw new Exception("Error sintáctico"); (Se ocupa guardar esto en una lista output)
                 }
                 else
                 {
-                    var possibleProductionElement = tablaSintactica[productionToInt(elementoExtraido), noProductionToInt(elementoLexico)];
-                    if (isProduction(possibleProductionElement)){
-                        if (possibleProductionElement != "λ")
-                            stack.Push(possibleProductionElement);
+                    var production = tablaSintactica[productionToInt(elementoExtraido), noProductionToInt(elementoLexico)];
+                    if (isProduction(production)){
+                        if (production != "λ")
+                        {
+                            foreach(char symbol in production.Reverse())
+                                this.stack.Push(symbol.ToString());
+                        }
                     }
                     else
                     {
-                        //throw new Exception("Error sintáctico"); (Se ocupa guardar esto en una lista output)
+                        toReturn.Add(new BetterSintacticError
+                        {
+                            ExpressionText = elementoLexico,
+                            errorType = BetterTypeError.InvalidExpression, //How can i know the error type?
+                            LineFound = elementoLexicoObj.LineaEnDondeAparece
+                        });
                     }
                 }
-            } while (elementoExtraido == "$");
+            } while (elementoExtraido != "$");
+
+            return toReturn;
         }
     }
 }
