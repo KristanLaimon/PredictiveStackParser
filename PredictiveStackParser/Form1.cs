@@ -15,7 +15,14 @@ namespace PredictiveStackParser
             var help = sintactic.LL(lexicResults);
 
         }
+        private void btnEjecutar_Click(object sender, EventArgs e)
+        {
+            dgvErrores.Rows.Clear();
+            dgvSintactica.Rows.Clear();
 
+            var error = sintactic.LL(lexicResults);
+
+        }
         private void Form1_Load(object sender, EventArgs e)
         {
 
@@ -45,5 +52,7 @@ namespace PredictiveStackParser
         {
             //
         }
+
+
     }
 }
