@@ -30,6 +30,8 @@ namespace PredictiveStackParser.Automatas
     {
         private string[,] tablaSintactica;
         private Stack<string> stack;
+        private readonly Dictionary<int, string> ErroresDisponibles;
+
 
         public BetterSintacticAutomata()
         {
@@ -44,6 +46,14 @@ namespace PredictiveStackParser.Automatas
                 /*G*/ { "\0",    "\0",  "λ",  "RF", "λ",  "λ" },
                 /*O*/ { "\0",    "X",   "\0", "\0", "\0", "\0"},
                 /*R*/ { "\0",    "\0",  "\0", "Z",  "\0", "\0"},
+            };
+
+            ErroresDisponibles = new()
+            {
+                {200, "Sin errores" },
+                {201, "Falta delimitador" },
+                {202, "Falta operador" },
+                {203, "Falta identificador / constante" }
             };
 
         }
