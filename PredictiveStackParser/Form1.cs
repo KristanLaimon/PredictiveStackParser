@@ -10,7 +10,7 @@ namespace PredictiveStackParser
         public Form1()
         {
             InitializeComponent();
-            this.labelMessage.Text = "";
+            this.labelMessage.Text = "Sin escanear";
             this.richTextBoxInput.Text = this.TextoPorDefecto;
         }
 
