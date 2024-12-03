@@ -10,49 +10,46 @@ namespace PredictiveStackParser
         public Form1()
         {
             InitializeComponent();
-            var lexicResults = lexic.EscanearTexto(this.TextoPorDefecto);
-            lexicResults = lexic.AddSignoDolarAlFinal(lexicResults);
-            var help = sintactic.LL(lexicResults);
-
+            this.labelMessage.Text = "";
+            this.richTextBoxInput.Text = this.TextoPorDefecto;
         }
+
         private void btnEjecutar_Click(object sender, EventArgs e)
         {
-            dgvErrores.Rows.Clear();
-            dgvSintactica.Rows.Clear();
+            int faseActual = 1;
+            int errorCode = 100;
+            string errorMsg = "Sin error";
+            int errorLine = -1;
 
-            var error = sintactic.LL(lexicResults);
+            var lexicResults = lexic.EscanearTexto(this.richTextBoxInput.Text);
+            if (lexicResults.Errores.Count > 0)
+            {
+                var first = lexicResults.Errores.First();
+                errorCode = first.CodigoError;
+                errorMsg = first.DescripcionError;
+                errorLine = first.LineaEnDondeAparece;
+            }
+            else
+            {
+                lexicResults = lexic.AddSignoDolarAlFinal(lexicResults);
+                var sintacticResult = sintactic.LL(lexicResults);
+                if (sintacticResult.Count > 0)
+                {
+                    var first = sintacticResult.First();
+                    faseActual = 2;
+                    errorCode = first.errorCode;
+                    errorMsg = first.errorDescription;
+                    errorLine = first.LineFound;
+                }
+            }
 
+            string finalMsg;
+            if (errorCode == 100)
+                finalMsg = $"{faseActual}:{errorCode} {errorMsg}";
+            else
+                finalMsg = $"{faseActual}:{errorCode} Error en línea {errorLine}: {errorMsg}";
+
+            labelMessage.Text = finalMsg;
         }
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label3_Click(object sender, EventArgs e)
-        {
-            //se crearon por error de deo
-        }
-
-        private void label4_Click(object sender, EventArgs e)
-        {
-            //se crearon por error de deo
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
-            //se crearon por error de deo
-        }
-
-        private void richTextBox1_TextChanged(object sender, EventArgs e)
-        {
-            //
-        }
-
-        private void label3_Click_1(object sender, EventArgs e)
-        {
-            //
-        }
-
-
     }
 }

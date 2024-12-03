@@ -24,14 +24,15 @@ namespace PredictiveStackParser.Automatas
         /// </summary>
         public BetterTypeError errorType = BetterTypeError.InvalidExpression;
         public int LineFound;
+        public int errorCode;
+        public string errorDescription = "";
     }
 
     internal class BetterSintacticAutomata
     {
         private string[,] tablaSintactica;
         private Stack<string> stack;
-        private readonly Dictionary<int, string> ErroresDisponibles;
-
+        private readonly Dictionary<BetterTypeError, (int, string)> ErroresDisponibles;
 
         public BetterSintacticAutomata()
         {
@@ -50,18 +51,19 @@ namespace PredictiveStackParser.Automatas
 
             ErroresDisponibles = new()
             {
-                {200, "Sin errores" },
-                {201, "Falta delimitador" },
-                {202, "Falta operador" },
-                {203, "Falta identificador / constante" }
+                {BetterTypeError.MissingOpeningBracket, (201, "Falta paréntesis de apertura") },
+                {BetterTypeError.MissingClosingBracket, (202, "Falta paréntesis de cierre") },
+                {BetterTypeError.MissingOperand, (203, "Falta operador") },
+                {BetterTypeError.MissingOperator, (204, "Falta identificador / constante") },
+                {BetterTypeError.InvalidExpression, (205, "Expresión inválida") } //Nunca debería de suceder
             };
-
         }
 
-        private bool isOperand(string element) => element.All(Char.IsLetterOrDigit);
+        private bool isOperand(string element) => element.All((charsito) => Char.IsLetterOrDigit(charsito) || charsito == '_' || charsito == '-');
         private bool isOperator(string element) => element == "+" || element == "-" || element == "*" || element == "/";
 
-        private int noProductionToInt(string i)
+
+        private int terminalToInt(string i)
         {
             if (i == "(") return 0;
             if (i == "X") return 1;
@@ -69,11 +71,10 @@ namespace PredictiveStackParser.Automatas
             if (i == "Z") return 3;
             if (i == ";") return 4;
             if (i == "$") return 5;
-
             throw new Exception("Esto no debería pasar, error al parsear un noProduction string a un índice para la tabla sintáctica");
         }
 
-        private int productionToInt(string letterProduction)
+        private int noTerminalToInt(string letterProduction)
         {
             return letterProduction switch
             {
@@ -147,11 +148,14 @@ namespace PredictiveStackParser.Automatas
                     // elementoLexico and elementoExtraido went to "λ" many times that stock out the stack!
                     if (!toReturn.Any(e => e.LineFound == fullLexicTable[apuntador].LineaEnDondeAparece))
                     {
+                        BetterTypeError errorTypeFound = IdentifyErrorType(elementoLexico, elementoExtraido);
                         toReturn.Add(new BetterSintacticError
                         {
                             ExpressionText = fullLexicTable[apuntador].TokenText,
-                            errorType = IdentifyErrorType(elementoLexico, elementoExtraido),
-                            LineFound = fullLexicTable[apuntador].LineaEnDondeAparece
+                            errorType = errorTypeFound,
+                            LineFound = fullLexicTable[apuntador].LineaEnDondeAparece,
+                            errorDescription = ErroresDisponibles[errorTypeFound].Item2,
+                            errorCode = ErroresDisponibles[errorTypeFound].Item1
                         });
                     }
                     break;
@@ -172,11 +176,14 @@ namespace PredictiveStackParser.Automatas
                         // Error: Add once and progress pointer
                         if (!toReturn.Any(e => e.LineFound == fullLexicTable[apuntador].LineaEnDondeAparece))
                         {
+                            BetterTypeError errorTypeFound = IdentifyErrorType(elementoLexico, elementoExtraido);
                             toReturn.Add(new BetterSintacticError
                             {
                                 ExpressionText = fullLexicTable[apuntador].TokenText,
-                                errorType = IdentifyErrorType(elementoLexico, elementoExtraido),
-                                LineFound = fullLexicTable[apuntador].LineaEnDondeAparece
+                                errorType = errorTypeFound,
+                                LineFound = fullLexicTable[apuntador].LineaEnDondeAparece,
+                                errorDescription = ErroresDisponibles[errorTypeFound].Item2,
+                                errorCode = ErroresDisponibles[errorTypeFound].Item1
                             });
                         }
                         apuntador++; // Progress to avoid processing the same error multiple times
@@ -184,7 +191,7 @@ namespace PredictiveStackParser.Automatas
                 }
                 else
                 {
-                    var production = tablaSintactica[productionToInt(elementoExtraido), noProductionToInt(elementoLexico)];
+                    var production = tablaSintactica[noTerminalToInt(elementoExtraido), terminalToInt(elementoLexico)];
                     if (isProduction(production))
                     {
                         if (production != "λ")
@@ -198,11 +205,14 @@ namespace PredictiveStackParser.Automatas
                         // Error: Invalid production for the non-terminal and input token
                         if (!toReturn.Any(e => e.LineFound == fullLexicTable[apuntador].LineaEnDondeAparece))
                         {
+                            BetterTypeError errorTypeFound = IdentifyErrorType(elementoLexico, elementoExtraido);
                             toReturn.Add(new BetterSintacticError
                             {
                                 ExpressionText = fullLexicTable[apuntador].TokenText,
-                                errorType = IdentifyErrorType(elementoLexico, elementoExtraido),
-                                LineFound = fullLexicTable[apuntador].LineaEnDondeAparece
+                                errorType = errorTypeFound,
+                                LineFound = fullLexicTable[apuntador].LineaEnDondeAparece,
+                                errorDescription = ErroresDisponibles[errorTypeFound].Item2,
+                                errorCode = ErroresDisponibles[errorTypeFound].Item1
                             });
                         }
                         apuntador++; // Progress to avoid looping on the same issue
