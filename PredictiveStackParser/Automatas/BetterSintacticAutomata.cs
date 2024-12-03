@@ -51,15 +51,15 @@ namespace PredictiveStackParser.Automatas
 
             ErroresDisponibles = new()
             {
-                {BetterTypeError.MissingOpeningBracket, (201, "Falta paréntesis de apertura") },
-                {BetterTypeError.MissingClosingBracket, (202, "Falta paréntesis de cierre") },
-                {BetterTypeError.MissingOperand, (203, "Falta operador") },
-                {BetterTypeError.MissingOperator, (204, "Falta identificador / constante") },
-                {BetterTypeError.InvalidExpression, (205, "Expresión inválida") } //Nunca debería de suceder
+                {BetterTypeError.MissingOpeningBracket, (201, "Falta delimitador") },
+                {BetterTypeError.MissingClosingBracket, (202, "Falta delimitador") },
+                {BetterTypeError.MissingOperand, (203, "Falta identificador") },
+                {BetterTypeError.MissingOperator, (204, "Falta operador") },
+                {BetterTypeError.InvalidExpression, (205, "Expresión inválida") } 
             };
         }
 
-        private bool isOperand(string element) => element.All((charsito) => Char.IsLetterOrDigit(charsito) || charsito == '_' || charsito == '-');
+        private bool isOperand(string element) => element.All((charsito) => Char.IsLetterOrDigit(charsito) || charsito == '_');
         private bool isOperator(string element) => element == "+" || element == "-" || element == "*" || element == "/";
 
 
@@ -159,6 +159,26 @@ namespace PredictiveStackParser.Automatas
                         });
                     }
                     break;
+                }
+
+                ///marranada 3000 by kris/tom
+                string fullLineStr = string.Join('\0', lexicResults.RegistrosLexicosPorLinea.Where((listaLinea, indice) => (indice + 1) == actualLine).First().Select(registerList => registerList.TokenText));
+                int numberOfOpeningBrackets = fullLineStr.Count(c => c == '(');
+                int numberOfClosingBrackets = fullLineStr.Count(c => c == ')');
+                if (numberOfClosingBrackets != numberOfOpeningBrackets)
+                {
+                    if (!toReturn.Any(e => e.LineFound == fullLexicTable[apuntador].LineaEnDondeAparece))
+                    {
+                        BetterTypeError errorTypeFound = BetterTypeError.MissingOpeningBracket;
+                        toReturn.Add(new BetterSintacticError
+                        {
+                            ExpressionText = fullLexicTable[apuntador].TokenText,
+                            errorType = errorTypeFound,
+                            LineFound = fullLexicTable[apuntador].LineaEnDondeAparece,
+                            errorDescription = ErroresDisponibles[errorTypeFound].Item2,
+                            errorCode = ErroresDisponibles[errorTypeFound].Item1
+                        });
+                    }
                 }
 
                 elementoExtraido = this.stack.Pop();
