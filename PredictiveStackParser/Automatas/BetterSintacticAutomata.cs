@@ -104,6 +104,7 @@ namespace PredictiveStackParser.Automatas
             if (elementLexico == "$" && elementExtraido == "F") return BetterTypeError.MissingClosingBracket;
             if (elementLexico == "Z" && elementExtraido == "F") return BetterTypeError.MissingOperand;
             if (elementLexico == "X" && elementExtraido == "G") return BetterTypeError.MissingOperator;
+            if (elementLexico == "(" && elementExtraido == "G") return BetterTypeError.MissingOperator;
             if (elementLexico == ")")return BetterTypeError.MissingOpeningBracket;
             if (elementExtraido == "A") return BetterTypeError.MissingClosingBracket;
 
