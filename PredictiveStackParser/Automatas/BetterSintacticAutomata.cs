@@ -59,7 +59,7 @@ namespace PredictiveStackParser.Automatas
             };
         }
 
-        private bool isOperand(string element) => element.All((charsito) => Char.IsLetterOrDigit(charsito) || charsito == '_');
+        private bool isOperand(string element) => element.All((charsito) => Char.IsLetterOrDigit(charsito) || charsito == '.' || charsito == '_');
         private bool isOperator(string element) => element == "+" || element == "-" || element == "*" || element == "/";
 
 
